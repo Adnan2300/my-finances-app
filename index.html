@@ -396,11 +396,12 @@
         <table class="data-table" id="globalEntriesTable">
           <thead>
             <tr>
-              <th onclick="sortTable('globalEntriesTable', 0)">Date/Time ↕</th>
-              <th onclick="sortTable('globalEntriesTable', 1)">Category ↕</th>
-              <th onclick="sortTable('globalEntriesTable', 2)">Type ↕</th>
-              <th onclick="sortTable('globalEntriesTable', 3)">Account ↕</th>
-              <th onclick="sortTable('globalEntriesTable', 4, true)">Amount ↕</th>
+              <th>Done</th>
+              <th onclick="sortTable('globalEntriesTable', 1)">Date/Time ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 2)">Category ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 3)">Type ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 4)">Account ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 5, true)">Amount ↕</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -463,10 +464,11 @@
         <table class="data-table" id="categoryEntriesTable">
           <thead>
             <tr>
-              <th onclick="sortTable('categoryEntriesTable', 0)">Date/Time ↕</th>
-              <th onclick="sortTable('categoryEntriesTable', 1)">Category ↕</th>
-              <th onclick="sortTable('categoryEntriesTable', 2)">Account ↕</th>
-              <th onclick="sortTable('categoryEntriesTable', 3, true)">Amount ↕</th>
+              <th>Done</th>
+              <th onclick="sortTable('categoryEntriesTable', 1)">Date/Time ↕</th>
+              <th onclick="sortTable('categoryEntriesTable', 2)">Category ↕</th>
+              <th onclick="sortTable('categoryEntriesTable', 3)">Account ↕</th>
+              <th onclick="sortTable('categoryEntriesTable', 4, true)">Amount ↕</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -493,10 +495,11 @@
         <table class="data-table" id="accountEntriesTable">
           <thead>
             <tr>
-              <th onclick="sortTable('accountEntriesTable', 0)">Date/Time ↕</th>
-              <th onclick="sortTable('accountEntriesTable', 1)">Category ↕</th>
-              <th onclick="sortTable('accountEntriesTable', 2)">Type ↕</th>
-              <th onclick="sortTable('accountEntriesTable', 3, true)">Amount ↕</th>
+              <th>Done</th>
+              <th onclick="sortTable('accountEntriesTable', 1)">Date/Time ↕</th>
+              <th onclick="sortTable('accountEntriesTable', 2)">Category ↕</th>
+              <th onclick="sortTable('accountEntriesTable', 3)">Type ↕</th>
+              <th onclick="sortTable('accountEntriesTable', 4, true)">Amount ↕</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -521,15 +524,17 @@
           { id: 102, name: 'Account #2', tag: 'Savings', balance: 12000.00, color: '#6ca2c7' }
         ],
         entries: [
-          { id: 1, accountId: 101, type: 'Credit', category: 'Salary', categoryColor: '#72b083', amount: 5000.00, datetime: '2026-08-01T09:00' },
-          { id: 2, accountId: 101, type: 'Debit', category: 'Groceries', categoryColor: '#e06c75', amount: 500.00, datetime: '2026-08-15T18:30' },
-          { id: 3, accountId: 101, type: 'Money I Owe', category: 'Friend Loan', categoryColor: '#e5c07b', amount: 200.00, datetime: '2026-08-20T14:15' }
+          { id: 1, accountId: 101, type: 'Credit', category: 'Salary', categoryColor: '#72b083', amount: 5000.00, datetime: '2026-08-01T09:00', settled: false },
+          { id: 2, accountId: 101, type: 'Debit', category: 'Groceries', categoryColor: '#e06c75', amount: 500.00, datetime: '2026-08-15T18:30', settled: false },
+          { id: 3, accountId: 101, type: 'Money I Owe', category: 'Friend Loan', categoryColor: '#e5c07b', amount: 200.00, datetime: '2026-08-20T14:15', settled: false }
         ]
       }
     ];
 
     let activeCountry = null;
     let activeAccount = null;
+    let currentFilteredDate = null;
+    let currentCategoryType = null;
     let revealedStates = {};
     let calendarDate = new Date();
 
@@ -703,8 +708,8 @@
       const isTotalRev = revealedStates['total_' + activeCountry.id];
       document.getElementById('totalAmountText').innerText = isTotalRev ? `${activeCountry.currency} ${total.toFixed(2)}` : '*****';
 
-      const totalOwe = activeCountry.entries.filter(e => e.type === 'Money I Owe').reduce((s, e) => s + e.amount, 0);
-      const totalOwed = activeCountry.entries.filter(e => e.type === 'Owed to Me').reduce((s, e) => s + e.amount, 0);
+      const totalOwe = activeCountry.entries.filter(e => e.type === 'Money I Owe' && !e.settled).reduce((s, e) => s + e.amount, 0);
+      const totalOwed = activeCountry.entries.filter(e => e.type === 'Owed to Me' && !e.settled).reduce((s, e) => s + e.amount, 0);
 
       const isOweRev = revealedStates['owe_' + activeCountry.id];
       const isOwedRev = revealedStates['owed_' + activeCountry.id];
@@ -785,16 +790,49 @@
       document.getElementById('entryModal').style.display = 'flex';
     }
 
-    function adjustAccountBalance(accountId, type, amount, isReversal = false) {
+    function adjustAccountBalance(accountId, type, amount, isReversal = false, isSettled = false) {
       const acc = activeCountry.accounts.find(a => a.id === accountId);
       if (!acc) return;
 
       let multiplier = isReversal ? -1 : 1;
 
-      if (type === 'Credit' || type === 'Owed to Me') {
+      if (type === 'Credit') {
         acc.balance += amount * multiplier;
-      } else if (type === 'Debit' || type === 'Money I Owe') {
+      } else if (type === 'Debit') {
         acc.balance -= amount * multiplier;
+      } else if (type === 'Money I Owe') {
+        if (!isSettled) {
+          acc.balance -= amount * multiplier;
+        }
+      } else if (type === 'Owed to Me') {
+        if (isSettled) {
+          acc.balance += amount * multiplier;
+        }
+      }
+    }
+
+    function toggleEntrySettled(entryId) {
+      const entry = activeCountry.entries.find(e => e.id === entryId);
+      if (!entry) return;
+
+      adjustAccountBalance(entry.accountId, entry.type, entry.amount, true, entry.settled);
+      entry.settled = !entry.settled;
+      adjustAccountBalance(entry.accountId, entry.type, entry.amount, false, entry.settled);
+
+      saveData();
+      renderCountryDetails();
+
+      if (document.getElementById('entryListModal').style.display === 'flex') {
+        openEntryListModal(currentFilteredDate);
+      }
+      if (document.getElementById('categoryListModal').style.display === 'flex') {
+        openCategoryList(currentCategoryType);
+      }
+      if (document.getElementById('accountDetailModal').style.display === 'flex' && activeAccount) {
+        openAccountDetailModal(activeAccount.id);
+      }
+      if (document.getElementById('calendarModal').style.display === 'flex') {
+        renderCalendar();
       }
     }
 
@@ -810,7 +848,7 @@
 
       if (editingId) {
         const oldEntry = activeCountry.entries.find(x => x.id === parseInt(editingId));
-        adjustAccountBalance(oldEntry.accountId, oldEntry.type, oldEntry.amount, true);
+        adjustAccountBalance(oldEntry.accountId, oldEntry.type, oldEntry.amount, true, oldEntry.settled);
 
         oldEntry.accountId = accountId;
         oldEntry.type = type;
@@ -819,19 +857,20 @@
         oldEntry.amount = amount;
         oldEntry.datetime = datetime;
 
-        adjustAccountBalance(accountId, type, amount, false);
+        adjustAccountBalance(accountId, type, amount, false, oldEntry.settled);
       } else {
-        const newEntry = { id: Date.now(), accountId, type, category, categoryColor, amount, datetime };
+        const newEntry = { id: Date.now(), accountId, type, category, categoryColor, amount, datetime, settled: false };
         activeCountry.entries.push(newEntry);
-        adjustAccountBalance(accountId, type, amount, false);
+        adjustAccountBalance(accountId, type, amount, false, false);
       }
 
       saveData();
       renderCountryDetails();
       closeModal('entryModal');
       
-      if (document.getElementById('entryListModal').style.display === 'flex') openEntryListModal();
+      if (document.getElementById('entryListModal').style.display === 'flex') openEntryListModal(currentFilteredDate);
       if (document.getElementById('accountDetailModal').style.display === 'flex') openAccountDetailModal(activeAccount.id);
+      if (document.getElementById('categoryListModal').style.display === 'flex') openCategoryList(currentCategoryType);
     }
 
     function deleteEntry(entryId) {
@@ -839,13 +878,14 @@
       
       const entry = activeCountry.entries.find(e => e.id === entryId);
       if (entry) {
-        adjustAccountBalance(entry.accountId, entry.type, entry.amount, true);
+        adjustAccountBalance(entry.accountId, entry.type, entry.amount, true, entry.settled);
         activeCountry.entries = activeCountry.entries.filter(e => e.id !== entryId);
         saveData();
         renderCountryDetails();
 
-        if (document.getElementById('entryListModal').style.display === 'flex') openEntryListModal();
+        if (document.getElementById('entryListModal').style.display === 'flex') openEntryListModal(currentFilteredDate);
         if (document.getElementById('accountDetailModal').style.display === 'flex') openAccountDetailModal(activeAccount.id);
+        if (document.getElementById('categoryListModal').style.display === 'flex') openCategoryList(currentCategoryType);
       }
     }
 
@@ -936,21 +976,29 @@
       tbody.innerHTML = '';
 
       if (entries.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-msg">No entries found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-msg">No entries found.</td></tr>`;
         return;
       }
 
       entries.forEach(e => {
         const acc = activeCountry.accounts.find(a => a.id === e.accountId);
         const formattedDate = e.datetime ? e.datetime.replace('T', ' ') : 'N/A';
+        const isSettled = !!e.settled;
 
         tbody.innerHTML += `
-          <tr>
-            <td>${formattedDate}</td>
-            <td><span class="color-tag-pill" style="background:${e.categoryColor || '#72b083'}"></span> ${e.category}</td>
-            <td>${e.type}</td>
-            ${includeAccountColumn ? `<td>${acc ? acc.name : 'Unknown'}</td>` : ''}
-            <td class="${e.type === 'Credit' || e.type === 'Owed to Me' ? 'text-green' : 'text-red'}">
+          <tr class="${isSettled ? 'row-settled' : ''}">
+            <td class="text-center">
+              <input type="checkbox" class="entry-settle-checkbox" ${isSettled ? 'checked' : ''} onchange="toggleEntrySettled(${e.id})" title="Mark as Cleared / Settled">
+            </td>
+            <td class="${isSettled ? 'text-strikethrough' : ''}">${formattedDate}</td>
+            <td class="${isSettled ? 'text-strikethrough' : ''}">
+              <span class="color-tag-pill" style="background:${e.categoryColor || '#72b083'}"></span> 
+              ${e.category}
+              ${isSettled ? '<span class="badge-settled">Cleared</span>' : ''}
+            </td>
+            <td class="${isSettled ? 'text-strikethrough' : ''}">${e.type}</td>
+            ${includeAccountColumn ? `<td class="${isSettled ? 'text-strikethrough' : ''}">${acc ? acc.name : 'Unknown'}</td>` : ''}
+            <td class="${isSettled ? 'text-settled-muted' : (e.type === 'Credit' || e.type === 'Owed to Me' ? 'text-green' : 'text-red')} ${isSettled ? 'text-strikethrough' : ''}">
               ${e.type === 'Credit' || e.type === 'Owed to Me' ? '+' : '-'}${activeCountry.currency} ${e.amount.toFixed(2)}
             </td>
             <td>
@@ -963,6 +1011,7 @@
     }
 
     function openEntryListModal(filterDate = null) {
+      currentFilteredDate = filterDate;
       let list = activeCountry.entries;
       const modalTitle = document.getElementById('entryListModalTitle');
       
@@ -988,6 +1037,7 @@
     }
 
     function openCategoryList(type) {
+      currentCategoryType = type;
       document.getElementById('categoryModalTitle').innerText = type;
       const list = activeCountry.entries.filter(e => e.type === type);
       renderTableRows(list, 'categoryEntriesTableBody', true);
@@ -1058,8 +1108,8 @@
         dayEntries.forEach(e => {
           if (e.type === 'Debit') mSpent += e.amount;
           if (e.type === 'Credit') mReceived += e.amount;
-          if (e.type === 'Money I Owe') mOwe += e.amount;
-          if (e.type === 'Owed to Me') mOwed += e.amount;
+          if (e.type === 'Money I Owe' && !e.settled) mOwe += e.amount;
+          if (e.type === 'Owed to Me' && !e.settled) mOwed += e.amount;
         });
 
         grid.innerHTML += `
