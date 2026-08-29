@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Finances</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- VIEW 1: HOME SCREEN -->
+  <div id="homeView">
+    <div class="header">
+      <h1>My Finances</h1>
+      <p class="subtitle">Track your money across countries</p>
+    </div>
+
+    <!-- Country Cards Grid -->
+    <div class="country-grid" id="countryGrid">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <!-- Floating (+) Button to Open Country Management Menu -->
+    <button class="fab-btn" onclick="openCountryActionsModal()" title="Manage Countries">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    </button>
+  </div>
+
+
+  <!-- VIEW 2: COUNTRY DETAIL SCREEN -->
+  <div id="countryDetailView" style="display: none;">
+    
+    <div class="top-nav">
+      <button class="btn-back" onclick="showHomeView()">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="btn-calendar" onclick="openCalendarModal()">
+        <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+        <span>Calendar</span>
+      </button>
+    </div>
+
+    <!-- Active Country Header -->
+    <div class="country-header" id="activeCountryHeader">
+      <!-- Injected dynamically -->
+    </div>
+
+    <!-- Total Across Accounts Card -->
+    <div class="total-accounts-card">
+      <span class="label">Total across all accounts</span>
+      <div class="amount-row">
+        <span id="totalAmountText">*****</span>
+        <button class="eye-toggle-btn" onclick="toggleTotalReveal(event)">
+          <svg class="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Centered Make Entry Button -->
+    <button class="btn-make-entry" onclick="openEntryModal()">
+      <svg class="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      <span>Make Entry</span>
+    </button>
+
+    <!-- Category Action Cards with Eye Toggle Feature -->
+    <div class="summary-grid">
+      <div class="summary-card" onclick="openCategoryList('Money I Owe')">
+        <div class="summary-card-header">
+          <svg class="summary-icon" viewBox="0 0 24 24"><path d="M15 4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1H5v2h14V5h-4V4zm-7 5h8v2H8V9zm10 4H6v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7z"/></svg>
+          <span>Money I Owe</span>
+        </div>
+        <div class="amount-row summary-amount">
+          <span id="summaryOweText">*****</span>
+          <button class="eye-toggle-btn" onclick="toggleCategoryReveal(event, 'owe')">
+            <svg class="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="summary-card" onclick="openCategoryList('Owed to Me')">
+        <div class="summary-card-header">
+          <svg class="summary-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 4.02 2 6.5S6.48 11 12 11s10-2.02 10-4.5S17.52 2 12 2zm0 11c-5.52 0-10-2.02-10-4.5v3.5C2 14.48 6.48 16.5 12 16.5s10-2.02 10-4.5V8.5c0 2.48-4.48 4.5-10 4.5zm0 5.5c-5.52 0-10-2.02-10-4.5V17.5C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-3.5c0 2.48-4.48 4.5-10 4.5z"/></svg>
+          <span>Owed to Me</span>
+        </div>
+        <div class="amount-row summary-amount">
+          <span id="summaryOwedText">*****</span>
+          <button class="eye-toggle-btn" onclick="toggleCategoryReveal(event, 'owed')">
+            <svg class="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accounts Section -->
+    <div class="accounts-section">
+      <div class="accounts-section-header">
+        <h2>Accounts</h2>
+        <button class="btn-account-option-menu" onclick="openAccountActionsModal()">Edit/Delete Accounts</button>
+      </div>
+      <div id="accountsListContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Bottom Bar Navigation -->
+    <div class="bottom-bar">
+      <button class="btn-entry-list" onclick="openEntryListModal()">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        <span>Entry list</span>
+      </button>
+      <!-- Direct + Button to Add Account -->
+      <button class="fab-btn fab-inline" onclick="openAddAccountModal()" title="Add New Account">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+
+  <!-- MODAL: COUNTRY ACTIONS MENU -->
+  <div class="modal-overlay" id="countryActionsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Country Options</h2>
+        <span class="close-btn" onclick="closeModal('countryActionsModal')">&times;</span>
+      </div>
+      <div class="menu-actions-list">
+        <button class="btn-action-option" onclick="openAddCountryModal()">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Add New Country
+        </button>
+        <button class="btn-action-option" onclick="openEditCountryModal()">
+          <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          Edit Existing Country
+        </button>
+        <button class="btn-action-option btn-danger" onclick="openDeleteCountryModal()">
+          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Delete Country
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ADD COUNTRY -->
+  <div class="modal-overlay" id="countryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Add New Country</h2>
+        <span class="close-btn" onclick="closeModal('countryModal')">&times;</span>
+      </div>
+      <form id="countryForm" onsubmit="saveCountry(event)">
+        <div class="form-group">
+          <label>Country name *</label>
+          <input type="text" id="countryName" placeholder="e.g. India" required>
+        </div>
+        <div class="form-group">
+          <label>Currency *</label>
+          <input type="text" id="countryCurrency" placeholder="e.g. INR" required>
+        </div>
+        <div class="form-group">
+          <label>Flag symbol</label>
+          <input type="text" id="countryFlag" placeholder="e.g. 🇮🇳 or 🌐">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('countryModal')">Cancel</button>
+          <button type="submit" class="btn-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: EDIT COUNTRY -->
+  <div class="modal-overlay" id="editCountryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Edit Country</h2>
+        <span class="close-btn" onclick="closeModal('editCountryModal')">&times;</span>
+      </div>
+      <form id="editCountryForm" onsubmit="saveEditedCountry(event)">
+        <div class="form-group">
+          <label>Select Country *</label>
+          <select id="editCountrySelect" onchange="populateCountryEditFields()" required></select>
+        </div>
+        <div class="form-group">
+          <label>Country Name *</label>
+          <input type="text" id="editCountryName" required>
+        </div>
+        <div class="form-group">
+          <label>Currency *</label>
+          <input type="text" id="editCountryCurrency" required>
+        </div>
+        <div class="form-group">
+          <label>Flag Symbol</label>
+          <input type="text" id="editCountryFlag">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('editCountryModal')">Cancel</button>
+          <button type="submit" class="btn-save">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: DELETE COUNTRY -->
+  <div class="modal-overlay" id="deleteCountryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Delete Country</h2>
+        <span class="close-btn" onclick="closeModal('deleteCountryModal')">&times;</span>
+      </div>
+      <form id="deleteCountryForm" onsubmit="confirmDeleteCountry(event)">
+        <div class="form-group">
+          <label>Select Country to Delete *</label>
+          <select id="deleteCountrySelect" required></select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('deleteCountryModal')">Cancel</button>
+          <button type="submit" class="btn-save btn-danger-bg">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: MAKE / EDIT ENTRY -->
+  <div class="modal-overlay modal-top-layer" id="entryModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="entryModalTitle">Make entry</h2>
+        <span class="close-btn" onclick="closeModal('entryModal')">&times;</span>
+      </div>
+      <form id="entryForm" onsubmit="saveEntry(event)">
+        <input type="hidden" id="editingEntryId" value="">
+        <div class="form-group">
+          <label>Target Account *</label>
+          <select id="entryAccountSelect" required></select>
+        </div>
+        <div class="form-group">
+          <label>Entry type *</label>
+          <select id="entryType" required>
+            <option value="Debit">Debit (Money Out)</option>
+            <option value="Credit">Credit (Money In)</option>
+            <option value="Money I Owe">Money I Owe (Debts to pay)</option>
+            <option value="Owed to Me">Owed to Me (Debts to collect)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <input type="text" id="entryCategory" placeholder="e.g. Salary, Groceries, Rent" required>
+        </div>
+        <div class="form-group">
+          <label>Category Color Tag</label>
+          <input type="color" id="entryCategoryColor" value="#72b083" class="color-picker-input">
+        </div>
+        <div class="form-group">
+          <label>Amount *</label>
+          <input type="number" step="0.01" id="entryAmount" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label>Date & Time *</label>
+          <input type="datetime-local" id="entryDateTime" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('entryModal')">Cancel</button>
+          <button type="submit" class="btn-save" id="entrySubmitBtn">Add Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ACCOUNT ACTIONS MENU -->
+  <div class="modal-overlay" id="accountActionsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Account Options</h2>
+        <span class="close-btn" onclick="closeModal('accountActionsModal')">&times;</span>
+      </div>
+      <div class="menu-actions-list">
+        <button class="btn-action-option" onclick="openAddAccountModal()">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Add New Account
+        </button>
+        <button class="btn-action-option" onclick="openEditAccountModal()">
+          <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          Edit Existing Account
+        </button>
+        <button class="btn-action-option btn-danger" onclick="openDeleteAccountModal()">
+          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Delete Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ADD ACCOUNT -->
+  <div class="modal-overlay" id="addAccountModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Add Account</h2>
+        <span class="close-btn" onclick="closeModal('addAccountModal')">&times;</span>
+      </div>
+      <form id="addAccountForm" onsubmit="saveNewAccount(event)">
+        <div class="form-group">
+          <label>Account Name *</label>
+          <input type="text" id="newAccountName" placeholder="e.g. Checking, Savings" required>
+        </div>
+        <div class="form-group">
+          <label>Account Type / Tag</label>
+          <input type="text" id="newAccountTag" placeholder="e.g. Spending, Investment">
+        </div>
+        <div class="form-group">
+          <label>Amount Present in Account</label>
+          <input type="number" step="0.01" id="newAccountBalance" placeholder="0.00" value="0.00">
+        </div>
+        <div class="form-group">
+          <label>Account Color Indicator</label>
+          <input type="color" id="newAccountColor" value="#72b083" class="color-picker-input">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('addAccountModal')">Cancel</button>
+          <button type="submit" class="btn-save">Create Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: EDIT ACCOUNT -->
+  <div class="modal-overlay" id="editAccountModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Edit Account</h2>
+        <span class="close-btn" onclick="closeModal('editAccountModal')">&times;</span>
+      </div>
+      <form id="editAccountForm" onsubmit="saveEditedAccount(event)">
+        <div class="form-group">
+          <label>Select Account *</label>
+          <select id="editAccountSelect" onchange="populateAccountEditFields()" required></select>
+        </div>
+        <div class="form-group">
+          <label>Updated Name *</label>
+          <input type="text" id="editAccountName" required>
+        </div>
+        <div class="form-group">
+          <label>Updated Tag</label>
+          <input type="text" id="editAccountTag">
+        </div>
+        <div class="form-group">
+          <label>Account Color Indicator</label>
+          <input type="color" id="editAccountColor" value="#72b083" class="color-picker-input">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('editAccountModal')">Cancel</button>
+          <button type="submit" class="btn-save">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: DELETE ACCOUNT -->
+  <div class="modal-overlay" id="deleteAccountModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Delete Account</h2>
+        <span class="close-btn" onclick="closeModal('deleteAccountModal')">&times;</span>
+      </div>
+      <form id="deleteAccountForm" onsubmit="confirmDeleteAccount(event)">
+        <div class="form-group">
+          <label>Select Account to Delete *</label>
+          <select id="deleteAccountSelect" required></select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal('deleteAccountModal')">Cancel</button>
+          <button type="submit" class="btn-save btn-danger-bg">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: FULL ENTRY LIST TABLE -->
+  <div class="modal-overlay modal-top-layer" id="entryListModal">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h2 id="entryListModalTitle">Entry List</h2>
+        <span class="close-btn" onclick="closeModal('entryListModal')">&times;</span>
+      </div>
+      <div class="table-container">
+        <table class="data-table" id="globalEntriesTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('globalEntriesTable', 0)">Date/Time ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 1)">Category ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 2)">Type ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 3)">Account ↕</th>
+              <th onclick="sortTable('globalEntriesTable', 4, true)">Amount ↕</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="globalEntriesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: INTERACTIVE CALENDAR -->
+  <div class="modal-overlay" id="calendarModal">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h2>Calendar View</h2>
+        <span class="close-btn" onclick="closeModal('calendarModal')">&times;</span>
+      </div>
+      
+      <!-- Calendar Nav -->
+      <div class="calendar-header-nav">
+        <button class="btn-back" onclick="changeMonth(-1)">&lt; Prev</button>
+        <h3 id="calendarMonthYear">Month Year</h3>
+        <button class="btn-back" onclick="changeMonth(1)">Next &gt;</button>
+      </div>
+
+      <!-- Calendar Grid -->
+      <div class="calendar-grid">
+        <div class="cal-day-header">Sun</div>
+        <div class="cal-day-header">Mon</div>
+        <div class="cal-day-header">Tue</div>
+        <div class="cal-day-header">Wed</div>
+        <div class="cal-day-header">Thu</div>
+        <div class="cal-day-header">Fri</div>
+        <div class="cal-day-header">Sat</div>
+      </div>
+      <div class="calendar-grid" id="calendarDaysGrid"></div>
+
+      <!-- Monthly Summary Section -->
+      <div class="calendar-summary-panel">
+        <h4>Monthly Breakdown</h4>
+        <div class="summary-metrics-grid">
+          <div class="metric-box metric-spent"><span>Spent</span><strong id="calSpentText">$0.00</strong></div>
+          <div class="metric-box metric-received"><span>Received</span><strong id="calReceivedText">$0.00</strong></div>
+          <div class="metric-box metric-owe"><span>Money I Owe</span><strong id="calOweText">$0.00</strong></div>
+          <div class="metric-box metric-owed"><span>Owed to Me</span><strong id="calOwedText">$0.00</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: CATEGORY DETAILS LIST -->
+  <div class="modal-overlay" id="categoryListModal">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h2 id="categoryModalTitle">Category Entries</h2>
+        <span class="close-btn" onclick="closeModal('categoryListModal')">&times;</span>
+      </div>
+      <div class="table-container">
+        <table class="data-table" id="categoryEntriesTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('categoryEntriesTable', 0)">Date/Time ↕</th>
+              <th onclick="sortTable('categoryEntriesTable', 1)">Category ↕</th>
+              <th onclick="sortTable('categoryEntriesTable', 2)">Account ↕</th>
+              <th onclick="sortTable('categoryEntriesTable', 3, true)">Amount ↕</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="categoryEntriesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ACCOUNT DETAIL VIEW -->
+  <div class="modal-overlay" id="accountDetailModal">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <h2 id="accountDetailTitle">Account Details</h2>
+        <span class="close-btn" onclick="closeModal('accountDetailModal')">&times;</span>
+      </div>
+      <div class="account-summary-banner">
+        <span>Current Balance:</span>
+        <strong id="accountDetailBalance">$0.00</strong>
+      </div>
+      <h3>Transactions</h3>
+      <div class="table-container">
+        <table class="data-table" id="accountEntriesTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('accountEntriesTable', 0)">Date/Time ↕</th>
+              <th onclick="sortTable('accountEntriesTable', 1)">Category ↕</th>
+              <th onclick="sortTable('accountEntriesTable', 2)">Type ↕</th>
+              <th onclick="sortTable('accountEntriesTable', 3, true)">Amount ↕</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="accountEntriesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    // State Initialization
+    let countries = JSON.parse(localStorage.getItem('my_countries')) || [
+      {
+        id: 1,
+        name: 'Saudi Arabia',
+        currency: 'SAR',
+        flag: '🇸🇦',
+        accounts: [
+          { id: 101, name: 'Account #1', tag: 'Spending', balance: 4300.00, color: '#72b083' },
+          { id: 102, name: 'Account #2', tag: 'Savings', balance: 12000.00, color: '#6ca2c7' }
+        ],
+        entries: [
+          { id: 1, accountId: 101, type: 'Credit', category: 'Salary', categoryColor: '#72b083', amount: 5000.00, datetime: '2026-08-01T09:00' },
+          { id: 2, accountId: 101, type: 'Debit', category: 'Groceries', categoryColor: '#e06c75', amount: 500.00, datetime: '2026-08-15T18:30' },
+          { id: 3, accountId: 101, type: 'Money I Owe', category: 'Friend Loan', categoryColor: '#e5c07b', amount: 200.00, datetime: '2026-08-20T14:15' }
+        ]
+      }
+    ];
+
+    let activeCountry = null;
+    let activeAccount = null;
+    let revealedStates = {};
+    let calendarDate = new Date();
+
+    function saveData() {
+      localStorage.setItem('my_countries', JSON.stringify(countries));
+    }
+
+    // --- HOME SCREEN LOGIC ---
+    function renderHomeCountries() {
+      const grid = document.getElementById('countryGrid');
+      grid.innerHTML = '';
+      countries.forEach(c => {
+        const total = c.accounts.reduce((sum, acc) => sum + acc.balance, 0);
+        const isRevealed = revealedStates['country_' + c.id];
+        const displayAmount = isRevealed ? `${c.currency} ${total.toFixed(2)}` : '*****';
+
+        grid.innerHTML += `
+          <div class="country-card" onclick="selectCountry(${c.id})">
+            <div class="card-top">
+              <span class="flag-icon">${c.flag || '🌐'}</span>
+              <div class="country-details">
+                <h3>${c.name}</h3>
+                <span class="currency">${c.currency}</span>
+              </div>
+            </div>
+            <div class="card-bottom">
+              <span class="label">Total</span>
+              <div class="amount-row">
+                <span>${displayAmount}</span>
+                <button class="eye-toggle-btn" onclick="toggleCountryReveal(event, ${c.id})">
+                  <svg class="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // --- COUNTRY MANAGEMENT (ADD, EDIT, DELETE) ---
+    function openCountryActionsModal() {
+      document.getElementById('countryActionsModal').style.display = 'flex';
+    }
+
+    function openAddCountryModal() {
+      closeModal('countryActionsModal');
+      document.getElementById('countryModal').style.display = 'flex';
+    }
+
+    function saveCountry(e) {
+      e.preventDefault();
+      const newCountry = {
+        id: Date.now(),
+        name: document.getElementById('countryName').value,
+        currency: document.getElementById('countryCurrency').value,
+        flag: document.getElementById('countryFlag').value || '🌐',
+        accounts: [],
+        entries: []
+      };
+      countries.push(newCountry);
+      saveData();
+      renderHomeCountries();
+      closeModal('countryModal');
+      document.getElementById('countryForm').reset();
+    }
+
+    function openEditCountryModal() {
+      closeModal('countryActionsModal');
+      const select = document.getElementById('editCountrySelect');
+      select.innerHTML = '';
+      countries.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+      populateCountryEditFields();
+      document.getElementById('editCountryModal').style.display = 'flex';
+    }
+
+    function populateCountryEditFields() {
+      const id = parseInt(document.getElementById('editCountrySelect').value);
+      const c = countries.find(x => x.id === id);
+      if (c) {
+        document.getElementById('editCountryName').value = c.name;
+        document.getElementById('editCountryCurrency').value = c.currency;
+        document.getElementById('editCountryFlag').value = c.flag;
+      }
+    }
+
+    function saveEditedCountry(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('editCountrySelect').value);
+      const c = countries.find(x => x.id === id);
+      if (c) {
+        c.name = document.getElementById('editCountryName').value;
+        c.currency = document.getElementById('editCountryCurrency').value;
+        c.flag = document.getElementById('editCountryFlag').value;
+        saveData();
+        renderHomeCountries();
+        if (activeCountry && activeCountry.id === c.id) renderCountryDetails();
+      }
+      closeModal('editCountryModal');
+    }
+
+    function openDeleteCountryModal() {
+      closeModal('countryActionsModal');
+      const select = document.getElementById('deleteCountrySelect');
+      select.innerHTML = '';
+      countries.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+      document.getElementById('deleteCountryModal').style.display = 'flex';
+    }
+
+    function confirmDeleteCountry(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('deleteCountrySelect').value);
+      countries = countries.filter(c => c.id !== id);
+      saveData();
+      renderHomeCountries();
+      closeModal('deleteCountryModal');
+    }
+
+    // --- REVEAL EYE TOGGLES ---
+    function toggleCountryReveal(e, countryId) {
+      e.stopPropagation();
+      revealedStates['country_' + countryId] = !revealedStates['country_' + countryId];
+      renderHomeCountries();
+    }
+
+    function toggleTotalReveal(e) {
+      e.stopPropagation();
+      revealedStates['total_' + activeCountry.id] = !revealedStates['total_' + activeCountry.id];
+      renderCountryDetails();
+    }
+
+    function toggleCategoryReveal(e, type) {
+      e.stopPropagation();
+      revealedStates[type + '_' + activeCountry.id] = !revealedStates[type + '_' + activeCountry.id];
+      renderCountryDetails();
+    }
+
+    function toggleAccountReveal(e, accountId) {
+      e.stopPropagation();
+      revealedStates['account_' + accountId] = !revealedStates['account_' + accountId];
+      renderAccountsList();
+    }
+
+    // --- NAVIGATION & COUNTRY DETAIL VIEW ---
+    function selectCountry(id) {
+      activeCountry = countries.find(c => c.id === id);
+      document.getElementById('homeView').style.display = 'none';
+      document.getElementById('countryDetailView').style.display = 'block';
+      renderCountryDetails();
+    }
+
+    function showHomeView() {
+      document.getElementById('countryDetailView').style.display = 'none';
+      document.getElementById('homeView').style.display = 'block';
+      renderHomeCountries();
+    }
+
+    function renderCountryDetails() {
+      document.getElementById('activeCountryHeader').innerHTML = `
+        <span class="flag-icon">${activeCountry.flag || '🌐'}</span>
+        <div>
+          <h2>${activeCountry.name}</h2>
+          <span class="currency">${activeCountry.currency}</span>
+        </div>
+      `;
+
+      const total = activeCountry.accounts.reduce((sum, acc) => sum + acc.balance, 0);
+      const isTotalRev = revealedStates['total_' + activeCountry.id];
+      document.getElementById('totalAmountText').innerText = isTotalRev ? `${activeCountry.currency} ${total.toFixed(2)}` : '*****';
+
+      const totalOwe = activeCountry.entries.filter(e => e.type === 'Money I Owe').reduce((s, e) => s + e.amount, 0);
+      const totalOwed = activeCountry.entries.filter(e => e.type === 'Owed to Me').reduce((s, e) => s + e.amount, 0);
+
+      const isOweRev = revealedStates['owe_' + activeCountry.id];
+      const isOwedRev = revealedStates['owed_' + activeCountry.id];
+
+      document.getElementById('summaryOweText').innerText = isOweRev ? `${activeCountry.currency} ${totalOwe.toFixed(2)}` : '*****';
+      document.getElementById('summaryOwedText').innerText = isOwedRev ? `${activeCountry.currency} ${totalOwed.toFixed(2)}` : '*****';
+
+      renderAccountsList();
+    }
+
+    function renderAccountsList() {
+      const container = document.getElementById('accountsListContainer');
+      container.innerHTML = '';
+
+      if (!activeCountry.accounts || activeCountry.accounts.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No accounts added yet.</p>';
+        return;
+      }
+
+      activeCountry.accounts.forEach(acc => {
+        const isRevealed = revealedStates['account_' + acc.id];
+        const displayBalance = isRevealed ? `${activeCountry.currency} ${acc.balance.toFixed(2)}` : '*****';
+
+        container.innerHTML += `
+          <div class="account-card" onclick="openAccountDetailModal(${acc.id})">
+            <div class="account-info">
+              <span class="dot" style="background: ${acc.color || '#72b083'}"></span>
+              <div>
+                <h3>${acc.name}</h3>
+                <span class="subtext">${acc.tag || 'Account'}</span>
+              </div>
+            </div>
+            <div class="amount-row">
+              <span>${displayBalance}</span>
+              <button class="eye-toggle-btn" onclick="toggleAccountReveal(event, ${acc.id})">
+                <svg class="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // --- TRANSACTIONS & ENTRY LOGIC ---
+    function openEntryModal(entryId = null) {
+      const select = document.getElementById('entryAccountSelect');
+      select.innerHTML = '';
+      if (!activeCountry.accounts || activeCountry.accounts.length === 0) {
+        alert("Please create an account first!");
+        return;
+      }
+      activeCountry.accounts.forEach(acc => {
+        select.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.tag})</option>`;
+      });
+
+      if (entryId) {
+        const entry = activeCountry.entries.find(e => e.id === entryId);
+        document.getElementById('entryModalTitle').innerText = 'Edit Entry';
+        document.getElementById('entrySubmitBtn').innerText = 'Update Entry';
+        document.getElementById('editingEntryId').value = entry.id;
+        document.getElementById('entryAccountSelect').value = entry.accountId;
+        document.getElementById('entryType').value = entry.type;
+        document.getElementById('entryCategory').value = entry.category;
+        document.getElementById('entryCategoryColor').value = entry.categoryColor || '#72b083';
+        document.getElementById('entryAmount').value = entry.amount;
+        document.getElementById('entryDateTime').value = entry.datetime;
+      } else {
+        document.getElementById('entryModalTitle').innerText = 'Make Entry';
+        document.getElementById('entrySubmitBtn').innerText = 'Add Entry';
+        document.getElementById('editingEntryId').value = '';
+        document.getElementById('entryForm').reset();
+        
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('entryDateTime').value = now.toISOString().slice(0, 16);
+      }
+
+      document.getElementById('entryModal').style.display = 'flex';
+    }
+
+    function adjustAccountBalance(accountId, type, amount, isReversal = false) {
+      const acc = activeCountry.accounts.find(a => a.id === accountId);
+      if (!acc) return;
+
+      let multiplier = isReversal ? -1 : 1;
+
+      if (type === 'Credit' || type === 'Owed to Me') {
+        acc.balance += amount * multiplier;
+      } else if (type === 'Debit' || type === 'Money I Owe') {
+        acc.balance -= amount * multiplier;
+      }
+    }
+
+    function saveEntry(e) {
+      e.preventDefault();
+      const editingId = document.getElementById('editingEntryId').value;
+      const accountId = parseInt(document.getElementById('entryAccountSelect').value);
+      const type = document.getElementById('entryType').value;
+      const category = document.getElementById('entryCategory').value;
+      const categoryColor = document.getElementById('entryCategoryColor').value;
+      const amount = parseFloat(document.getElementById('entryAmount').value);
+      const datetime = document.getElementById('entryDateTime').value;
+
+      if (editingId) {
+        const oldEntry = activeCountry.entries.find(x => x.id === parseInt(editingId));
+        adjustAccountBalance(oldEntry.accountId, oldEntry.type, oldEntry.amount, true);
+
+        oldEntry.accountId = accountId;
+        oldEntry.type = type;
+        oldEntry.category = category;
+        oldEntry.categoryColor = categoryColor;
+        oldEntry.amount = amount;
+        oldEntry.datetime = datetime;
+
+        adjustAccountBalance(accountId, type, amount, false);
+      } else {
+        const newEntry = { id: Date.now(), accountId, type, category, categoryColor, amount, datetime };
+        activeCountry.entries.push(newEntry);
+        adjustAccountBalance(accountId, type, amount, false);
+      }
+
+      saveData();
+      renderCountryDetails();
+      closeModal('entryModal');
+      
+      if (document.getElementById('entryListModal').style.display === 'flex') openEntryListModal();
+      if (document.getElementById('accountDetailModal').style.display === 'flex') openAccountDetailModal(activeAccount.id);
+    }
+
+    function deleteEntry(entryId) {
+      if (!confirm("Are you sure you want to delete this entry?")) return;
+      
+      const entry = activeCountry.entries.find(e => e.id === entryId);
+      if (entry) {
+        adjustAccountBalance(entry.accountId, entry.type, entry.amount, true);
+        activeCountry.entries = activeCountry.entries.filter(e => e.id !== entryId);
+        saveData();
+        renderCountryDetails();
+
+        if (document.getElementById('entryListModal').style.display === 'flex') openEntryListModal();
+        if (document.getElementById('accountDetailModal').style.display === 'flex') openAccountDetailModal(activeAccount.id);
+      }
+    }
+
+    // --- ACCOUNT MANAGEMENT ---
+    function openAddAccountModal() {
+      if (document.getElementById('accountActionsModal').style.display === 'flex') {
+        closeModal('accountActionsModal');
+      }
+      document.getElementById('addAccountModal').style.display = 'flex';
+    }
+
+    function saveNewAccount(e) {
+      e.preventDefault();
+      const name = document.getElementById('newAccountName').value;
+      const tag = document.getElementById('newAccountTag').value || 'General';
+      const color = document.getElementById('newAccountColor').value;
+      const balance = parseFloat(document.getElementById('newAccountBalance').value) || 0.00;
+
+      activeCountry.accounts.push({ id: Date.now(), name, tag, balance, color });
+
+      saveData();
+      renderCountryDetails();
+      closeModal('addAccountModal');
+      document.getElementById('addAccountForm').reset();
+    }
+
+    function openAccountActionsModal() {
+      document.getElementById('accountActionsModal').style.display = 'flex';
+    }
+
+    function openEditAccountModal() {
+      closeModal('accountActionsModal');
+      const select = document.getElementById('editAccountSelect');
+      select.innerHTML = '';
+      activeCountry.accounts.forEach(acc => {
+        select.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
+      });
+      populateAccountEditFields();
+      document.getElementById('editAccountModal').style.display = 'flex';
+    }
+
+    function populateAccountEditFields() {
+      const selectId = parseInt(document.getElementById('editAccountSelect').value);
+      const acc = activeCountry.accounts.find(a => a.id === selectId);
+      if (acc) {
+        document.getElementById('editAccountName').value = acc.name;
+        document.getElementById('editAccountTag').value = acc.tag;
+        document.getElementById('editAccountColor').value = acc.color || '#72b083';
+      }
+    }
+
+    function saveEditedAccount(e) {
+      e.preventDefault();
+      const selectId = parseInt(document.getElementById('editAccountSelect').value);
+      const acc = activeCountry.accounts.find(a => a.id === selectId);
+      if (acc) {
+        acc.name = document.getElementById('editAccountName').value;
+        acc.tag = document.getElementById('editAccountTag').value;
+        acc.color = document.getElementById('editAccountColor').value;
+        saveData();
+        renderCountryDetails();
+      }
+      closeModal('editAccountModal');
+    }
+
+    function openDeleteAccountModal() {
+      closeModal('accountActionsModal');
+      const select = document.getElementById('deleteAccountSelect');
+      select.innerHTML = '';
+      activeCountry.accounts.forEach(acc => {
+        select.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
+      });
+      document.getElementById('deleteAccountModal').style.display = 'flex';
+    }
+
+    function confirmDeleteAccount(e) {
+      e.preventDefault();
+      const selectId = parseInt(document.getElementById('deleteAccountSelect').value);
+      activeCountry.accounts = activeCountry.accounts.filter(a => a.id !== selectId);
+      saveData();
+      renderCountryDetails();
+      closeModal('deleteAccountModal');
+    }
+
+    // --- SORTABLE TABLES & MODAL VIEWS ---
+    function renderTableRows(entries, tbodyId, includeAccountColumn = true) {
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = '';
+
+      if (entries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-msg">No entries found.</td></tr>`;
+        return;
+      }
+
+      entries.forEach(e => {
+        const acc = activeCountry.accounts.find(a => a.id === e.accountId);
+        const formattedDate = e.datetime ? e.datetime.replace('T', ' ') : 'N/A';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${formattedDate}</td>
+            <td><span class="color-tag-pill" style="background:${e.categoryColor || '#72b083'}"></span> ${e.category}</td>
+            <td>${e.type}</td>
+            ${includeAccountColumn ? `<td>${acc ? acc.name : 'Unknown'}</td>` : ''}
+            <td class="${e.type === 'Credit' || e.type === 'Owed to Me' ? 'text-green' : 'text-red'}">
+              ${e.type === 'Credit' || e.type === 'Owed to Me' ? '+' : '-'}${activeCountry.currency} ${e.amount.toFixed(2)}
+            </td>
+            <td>
+              <button class="btn-table-action" onclick="openEntryModal(${e.id})">Edit</button>
+              <button class="btn-table-action btn-danger" onclick="deleteEntry(${e.id})">Del</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function openEntryListModal(filterDate = null) {
+      let list = activeCountry.entries;
+      const modalTitle = document.getElementById('entryListModalTitle');
+      
+      if (filterDate) {
+        list = list.filter(e => e.datetime && e.datetime.startsWith(filterDate));
+        modalTitle.innerText = `Entries for ${filterDate}`;
+      } else {
+        modalTitle.innerText = `Entry List`;
+      }
+      
+      renderTableRows(list, 'globalEntriesTableBody', true);
+      document.getElementById('entryListModal').style.display = 'flex';
+    }
+
+    function openAccountDetailModal(accId) {
+      activeAccount = activeCountry.accounts.find(a => a.id === accId);
+      document.getElementById('accountDetailTitle').innerText = activeAccount.name;
+      document.getElementById('accountDetailBalance').innerText = `${activeCountry.currency} ${activeAccount.balance.toFixed(2)}`;
+
+      const list = activeCountry.entries.filter(e => e.accountId === accId);
+      renderTableRows(list, 'accountEntriesTableBody', false);
+      document.getElementById('accountDetailModal').style.display = 'flex';
+    }
+
+    function openCategoryList(type) {
+      document.getElementById('categoryModalTitle').innerText = type;
+      const list = activeCountry.entries.filter(e => e.type === type);
+      renderTableRows(list, 'categoryEntriesTableBody', true);
+      document.getElementById('categoryListModal').style.display = 'flex';
+    }
+
+    function sortTable(tableId, colIndex, isNumeric = false) {
+      const table = document.getElementById(tableId);
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      
+      let dir = table.getAttribute('data-sort-dir') === 'asc' ? 'desc' : 'asc';
+      table.setAttribute('data-sort-dir', dir);
+
+      rows.sort((a, b) => {
+        let aCol = a.children[colIndex].innerText.trim();
+        let bCol = b.children[colIndex].innerText.trim();
+
+        if (isNumeric) {
+          aCol = parseFloat(aCol.replace(/[^0-9.-]+/g, '')) || 0;
+          bCol = parseFloat(bCol.replace(/[^0-9.-]+/g, '')) || 0;
+          return dir === 'asc' ? aCol - bCol : bCol - aCol;
+        }
+
+        return dir === 'asc' ? aCol.localeCompare(bCol) : bCol.localeCompare(aCol);
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // --- FULL CALENDAR ENGINE ---
+    function openCalendarModal() {
+      renderCalendar();
+      document.getElementById('calendarModal').style.display = 'flex';
+    }
+
+    function changeMonth(delta) {
+      calendarDate.setMonth(calendarDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      
+      document.getElementById('calendarMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      const grid = document.getElementById('calendarDaysGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += `<div class="cal-day empty"></div>`;
+      }
+
+      let mSpent = 0, mReceived = 0, mOwe = 0, mOwed = 0;
+
+      for (let day = 1; day <= totalDays; day++) {
+        const monthStr = String(month + 1).padStart(2, '0');
+        const dayStr = String(day).padStart(2, '0');
+        const formattedDateStr = `${year}-${monthStr}-${dayStr}`;
+
+        const dayEntries = activeCountry.entries.filter(e => e.datetime && e.datetime.startsWith(formattedDateStr));
+
+        dayEntries.forEach(e => {
+          if (e.type === 'Debit') mSpent += e.amount;
+          if (e.type === 'Credit') mReceived += e.amount;
+          if (e.type === 'Money I Owe') mOwe += e.amount;
+          if (e.type === 'Owed to Me') mOwed += e.amount;
+        });
+
+        grid.innerHTML += `
+          <div class="cal-day ${dayEntries.length > 0 ? 'has-entries' : ''}" onclick="openEntryListModal('${formattedDateStr}')">
+            <span class="day-num">${day}</span>
+            ${dayEntries.length > 0 ? `<span class="entry-count-badge">${dayEntries.length}</span>` : ''}
+          </div>
+        `;
+      }
+
+      document.getElementById('calSpentText').innerText = `${activeCountry.currency} ${mSpent.toFixed(2)}`;
+      document.getElementById('calReceivedText').innerText = `${activeCountry.currency} ${mReceived.toFixed(2)}`;
+      document.getElementById('calOweText').innerText = `${activeCountry.currency} ${mOwe.toFixed(2)}`;
+      document.getElementById('calOwedText').innerText = `${activeCountry.currency} ${mOwed.toFixed(2)}`;
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    // Launch App
+    renderHomeCountries();
+  </script>
+</body>
+</html>

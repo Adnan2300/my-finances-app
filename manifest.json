@@ -1,0 +1,9 @@
+{
+  "short_name": "Prowler",
+  "name": "Prowler Spending Tracker",
+  "icons": [],
+  "start_url": ".",
+  "background_color": "#09050e",
+  "theme_color": "#0d0714",
+  "display": "standalone"
+}
