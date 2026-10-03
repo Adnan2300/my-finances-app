@@ -1133,5 +1133,209 @@
     // Launch App
     renderHomeCountries();
   </script>
+
+  <!-- ===== BACKUP / RESTORE (added; does not touch the app's own code) ===== -->
+  <style>
+    #bkOpenBtn{position:fixed;left:16px;bottom:16px;width:44px;height:44px;border-radius:50%;border:1px solid #3a2a4d;background:#1a1024;color:#e8e0f0;font-size:20px;line-height:1;z-index:9998;opacity:.85;cursor:pointer}
+    #bkOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.78);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch}
+    #bkCard{max-width:440px;margin:32px auto;padding:20px;background:#0d0714;border:1px solid #3a2a4d;border-radius:14px;color:#e8e0f0;font-family:-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.45;box-sizing:border-box}
+    #bkCard h2{margin:0 0 4px;font-size:18px}
+    #bkCard h3{margin:20px 0 8px;font-size:15px}
+    #bkCard p{margin:6px 0;color:#b9aecb}
+    #bkCard button{display:block;width:100%;margin:8px 0 0;padding:12px;border-radius:10px;border:1px solid #3a2a4d;background:#1a1024;color:#e8e0f0;font-size:15px;cursor:pointer}
+    #bkCard button.bk-main{background:#72b083;border-color:#72b083;color:#09050e;font-weight:600}
+    #bkCard button.bk-danger{border-color:#e06c75;color:#e06c75}
+    #bkCard textarea{width:100%;height:90px;margin-top:8px;padding:8px;box-sizing:border-box;border-radius:10px;border:1px solid #3a2a4d;background:#09050e;color:#e8e0f0;font-size:13px}
+    #bkCard input[type=file]{width:100%;margin-top:8px;color:#b9aecb}
+    #bkFound{margin:0;padding-left:18px;color:#e8e0f0;font-size:13px;word-break:break-word}
+    #bkStatus{min-height:20px;margin-top:14px;color:#e5c07b;font-size:14px}
+  </style>
+
+  <button id="bkOpenBtn" aria-label="Backup and restore">&#128190;</button>
+
+  <div id="bkOverlay">
+    <div id="bkCard">
+      <h2>Backup and restore</h2>
+      <p>Data currently stored in this app on this device:</p>
+      <ul id="bkFound"></ul>
+      <p id="bkPersist"></p>
+
+      <h3>Save a backup</h3>
+      <p>The file contains your full financial data and is not encrypted. Keep it somewhere private.</p>
+      <button class="bk-main" id="bkShare">Save to Files / share</button>
+      <button id="bkDownload">Download file</button>
+      <button id="bkCopy">Copy backup text</button>
+
+      <h3>Restore from a backup</h3>
+      <p>Replaces the app's data with the backup's. A safety copy of the current data is kept first.</p>
+      <input type="file" id="bkFile" accept=".json,application/json,text/plain">
+      <textarea id="bkPaste" placeholder="Or paste the backup text here"></textarea>
+      <button id="bkRestorePaste">Restore from pasted text</button>
+      <button id="bkUndo" class="bk-danger" style="display:none">Undo last restore</button>
+
+      <div id="bkStatus" role="status" aria-live="polite"></div>
+      <button id="bkClose">Close</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var SKIP = '_bk_';               // keys the backup itself uses; never exported
+    var SAFETY = '_bk_before_import';
+    function $(id) { return document.getElementById(id); }
+    function status(msg) { $('bkStatus').textContent = msg; }
+
+    function readAll() {
+      var out = {};
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k.indexOf(SKIP) === 0) continue;
+        out[k] = localStorage.getItem(k);
+      }
+      return out;
+    }
+
+    function describe(k, raw) {
+      var kb = (raw.length / 1024).toFixed(1) + ' KB';
+      var detail = '';
+      try {
+        var v = JSON.parse(raw);
+        if (k === 'my_countries' && Array.isArray(v)) {
+          var a = 0, e = 0;
+          v.forEach(function (c) { a += (c.accounts || []).length; e += (c.entries || []).length; });
+          detail = v.length + ' countries, ' + a + ' accounts, ' + e + ' entries';
+        } else if (k === 'prowler_data' && v && typeof v === 'object') {
+          detail = (v.countries || []).length + ' countries, ' + (v.accounts || []).length + ' accounts, ' +
+                   (v.entries || []).length + ' entries, ' + (v.debts || []).length + ' debts';
+        }
+      } catch (_) {}
+      return k + ': ' + kb + (detail ? ' (' + detail + ')' : '');
+    }
+
+    function refresh() {
+      var list = $('bkFound'), all = readAll(), keys = Object.keys(all);
+      list.innerHTML = '';
+      if (!keys.length) {
+        var li = document.createElement('li'); li.textContent = 'Nothing saved yet'; list.appendChild(li);
+      }
+      keys.forEach(function (k) {
+        var li = document.createElement('li'); li.textContent = describe(k, all[k]); list.appendChild(li);
+      });
+      $('bkUndo').style.display = localStorage.getItem(SAFETY) ? 'block' : 'none';
+    }
+
+    function buildBackup() {
+      return JSON.stringify({
+        app: 'prowler-finance-backup',
+        format: 1,
+        exportedAt: new Date().toISOString(),
+        origin: location.origin,
+        keys: readAll()
+      }, null, 2);
+    }
+    function fileName() { return 'finance-backup-' + new Date().toISOString().slice(0, 10) + '.json'; }
+
+    // ---- Save ----
+    $('bkShare').onclick = function () {
+      var text = buildBackup(), name = fileName(), file = null, types = ['application/json', 'text/plain'];
+      if (navigator.canShare && window.File) {
+        for (var i = 0; i < types.length && !file; i++) {
+          try {
+            var f = new File([text], name, { type: types[i] });
+            if (navigator.canShare({ files: [f] })) file = f;
+          } catch (_) {}
+        }
+      }
+      if (!file) { status('Sharing files is not available here. Use Download or Copy instead.'); return; }
+      navigator.share({ files: [file], title: name })
+        .then(function () { status('Backup handed to the share sheet. Check that the file actually saved.'); })
+        .catch(function (err) {
+          status(err && err.name === 'AbortError' ? 'Cancelled.' : 'Share failed (' + (err && err.message) + '). Try Download or Copy.');
+        });
+    };
+
+    $('bkDownload').onclick = function () {
+      var url = URL.createObjectURL(new Blob([buildBackup()], { type: 'application/json' }));
+      var a = document.createElement('a');
+      a.href = url; a.download = fileName();
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 4000);
+      status('Download started. If nothing appears, use Save to Files or Copy.');
+    };
+
+    $('bkCopy').onclick = function () {
+      var text = buildBackup();
+      function fallback() {
+        var ta = $('bkPaste'); ta.value = text; ta.focus(); ta.select();
+        try { document.execCommand('copy'); status('Copied. Paste it into a note or message to yourself and keep it.'); }
+        catch (_) { status('Select all the text in the box below and copy it manually.'); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          status('Copied. Paste it into a note or message to yourself and keep it.');
+        }).catch(fallback);
+      } else fallback();
+    };
+
+    // ---- Restore ----
+    function applyBackup(text) {
+      var data;
+      try { data = JSON.parse(text); } catch (_) { status('That is not valid backup text.'); return; }
+      if (!data || data.app !== 'prowler-finance-backup' || !data.keys || typeof data.keys !== 'object') {
+        status('That file is not a backup made by this app.'); return;
+      }
+      var keys = Object.keys(data.keys).filter(function (k) {
+        return typeof data.keys[k] === 'string' && k.indexOf(SKIP) !== 0;
+      });
+      if (!keys.length) { status('The backup contains no data.'); return; }
+      if (!confirm('Restore ' + keys.length + ' item(s) from the backup made ' + data.exportedAt +
+                   '?\n\nThis replaces the current data for: ' + keys.join(', '))) return;
+      try {
+        localStorage.setItem(SAFETY, JSON.stringify({ at: new Date().toISOString(), keys: readAll() }));
+      } catch (_) {
+        if (!confirm('Could not keep a safety copy of the current data. Continue anyway?')) return;
+      }
+      keys.forEach(function (k) { localStorage.setItem(k, data.keys[k]); });
+      location.reload();
+    }
+
+    $('bkFile').onchange = function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () { applyBackup(String(r.result)); };
+      r.onerror = function () { status('Could not read that file.'); };
+      r.readAsText(f);
+    };
+    $('bkRestorePaste').onclick = function () {
+      var t = $('bkPaste').value.trim();
+      if (!t) { status('Paste the backup text into the box first.'); return; }
+      applyBackup(t);
+    };
+    $('bkUndo').onclick = function () {
+      var raw = localStorage.getItem(SAFETY), prev;
+      try { prev = JSON.parse(raw); } catch (_) {}
+      if (!prev || !prev.keys) { status('No safety copy found.'); return; }
+      if (!confirm('Go back to the data as it was on ' + prev.at + '?')) return;
+      Object.keys(prev.keys).forEach(function (k) { localStorage.setItem(k, prev.keys[k]); });
+      location.reload();
+    };
+
+    // ---- Open / close ----
+    $('bkOpenBtn').onclick = function () {
+      status(''); refresh();
+      $('bkOverlay').style.display = 'block';
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().then(function (ok) {
+          $('bkPersist').textContent = ok ? 'Browser has marked this storage as persistent.'
+                                          : 'Browser has not marked this storage as persistent, so keep backups.';
+        }).catch(function () {});
+      }
+    };
+    $('bkClose').onclick = function () { $('bkOverlay').style.display = 'none'; };
+  })();
+  </script>
+  <!-- ===== END BACKUP / RESTORE ===== -->
+
 </body>
 </html>
